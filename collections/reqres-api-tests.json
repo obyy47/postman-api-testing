@@ -1,0 +1,436 @@
+{
+  "info": {
+    "_postman_id": "ee3769bd-24b8-4695-aee4-13282f1ab6d9",
+    "name": "Reqres API - API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48801725",
+    "_collection_link": "https://go.postman.co/collection/48801725-ee3769bd-24b8-4695-aee4-13282f1ab6d9?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Get List Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi struktur data\r\npm.test(\"Verify page number and user array\", () => {\r\n    pm.expect(jsonData.page).to.eql(2);\r\n    pm.expect(jsonData.data).to.be.an(\"array\");\r\n});\r\n\r\n// Validasi JSON Schema untuk List Users (Array & Pagination)\r\nconst schemaListUsers = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"page\", \"per_page\", \"total\", \"total_pages\", \"data\"],\r\n    \"properties\": {\r\n        \"page\": { \"type\": \"number\" },\r\n        \"per_page\": { \"type\": \"number\" },\r\n        \"total\": { \"type\": \"number\" },\r\n        \"total_pages\": { \"type\": \"number\" },\r\n        \"data\": {\r\n            \"type\": \"array\",\r\n            \"items\": {\r\n                \"type\": \"object\",\r\n                \"required\": [\"id\", \"email\", \"first_name\", \"last_name\", \"avatar\"],\r\n                \"properties\": {\r\n                    \"id\": { \"type\": \"number\" },\r\n                    \"email\": { \"type\": \"string\" },\r\n                    \"first_name\": { \"type\": \"string\" },\r\n                    \"last_name\": { \"type\": \"string\" },\r\n                    \"avatar\": { \"type\": \"string\" }\r\n                }\r\n            }\r\n        }\r\n    }\r\n};\r\n\r\npm.test(\"Verify List Users JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schemaListUsers);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users?page=2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Create User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 201 Created (Karena bikin data baru)\r\npm.test(\"Status code is 201 Created\", () => {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi nama & job yang dikembalikan server\r\npm.test(\"Verify created user details\", () => {\r\n    pm.expect(jsonData.name).to.eql(\"Robby Adriansyah\");\r\n    pm.expect(jsonData.job).to.eql(\"QA Automation Engineer\");\r\n    pm.expect(jsonData).to.have.property(\"id\");\r\n});\r\n\r\n// 4. Simpan ID user baru ke Environment Variable\r\npm.environment.set(\"user_id\", jsonData.id);\r\n\r\n// Validasi JSON Schema untuk Create User\r\nconst schemaCreateUser = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"name\", \"job\", \"id\", \"createdAt\"],\r\n    \"properties\": {\r\n        \"name\": { \"type\": \"string\" },\r\n        \"job\": { \"type\": \"string\" },\r\n        \"id\": { \"type\": \"string\" },\r\n        \"createdAt\": { \"type\": \"string\" }\r\n    }\r\n};\r\n\r\npm.test(\"Verify Create User JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schemaCreateUser);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Robby Adriansyah\",\r\n    \"job\": \"QA Automation Engineer\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Update User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi bahwa 'job' berhasil di-update jadi Lead QA\r\npm.test(\"Verify updated job title\", () => {\r\n    pm.expect(jsonData.job).to.eql(\"Lead QA Automation Engineer\");\r\n    pm.expect(jsonData).to.have.property(\"updatedAt\");\r\n});\r\n\r\n// Validasi JSON Schema untuk Update User\r\nconst schemaUpdateUser = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"name\", \"job\", \"updatedAt\"],\r\n    \"properties\": {\r\n        \"name\": { \"type\": \"string\" },\r\n        \"job\": { \"type\": \"string\" },\r\n        \"updatedAt\": { \"type\": \"string\" }\r\n    }\r\n};\r\n\r\npm.test(\"Verify Update User JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schemaUpdateUser);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Robby Adriansyah\",\r\n    \"job\": \"Lead QA Automation Engineer\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "{{user_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Get Single User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi objek data user ID 2\r\npm.test(\"Verify single user details\", () => {\r\n    pm.expect(jsonData.data.id).to.eql(2);\r\n    pm.expect(jsonData.data.email).to.be.a(\"string\");\r\n    pm.expect(jsonData.data).to.have.property(\"first_name\");\r\n});\r\n\r\n// 1. Definisikan cetak biru (Schema) untuk respon Get Single User\r\nconst schema = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"data\", \"support\"],\r\n    \"properties\": {\r\n        \"data\": {\r\n            \"type\": \"object\",\r\n            \"required\": [\"id\", \"email\", \"first_name\", \"last_name\", \"avatar\"],\r\n            \"properties\": {\r\n                \"id\": { \"type\": \"number\" },\r\n                \"email\": { \"type\": \"string\" },\r\n                \"first_name\": { \"type\": \"string\" },\r\n                \"last_name\": { \"type\": \"string\" },\r\n                \"avatar\": { \"type\": \"string\" }\r\n            }\r\n        }\r\n    }\r\n};\r\n\r\n// 2. Validasi kalau respon server 100% cocok sama schema di atas\r\npm.test(\"Verify response matches JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schema);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - GET Single User Not Found (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Validasi Status Code HARUS 404 Not Found\r\npm.test(\"Status code is 404 Not Found\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\n// Validasi kalau body responnya kosong {}\r\nconst jsonData = pm.response.json();\r\npm.test(\"Verify response body is empty object\", () => {\r\n    pm.expect(Object.keys(jsonData).length).to.eql(0);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/23",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "23"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - POST Register Unsuccessful",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code HARUS 400 Bad Request\r\npm.test(\"Status code is 400 Bad Request\", () => {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi pesan error dari server\r\npm.test(\"Verify error message for missing password\", () => {\r\n    pm.expect(jsonData.error).to.eql(\"Missing password\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"sydney@fife\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 - Login Successful",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi token login dikembalikan & simpan ke Environment\r\npm.test(\"Verify login returns authentication token\", () => {\r\n    pm.expect(jsonData).to.have.property(\"token\");\r\n    pm.expect(jsonData.token).to.be.a(\"string\");\r\n});\r\n\r\n// Simpan token reqres ke Environment Variable\r\npm.environment.set(\"reqres_token\", jsonData.token);\r\n\r\n// Validasi JSON Schema untuk Login Success Token\r\nconst schemaLoginSuccess = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"token\"],\r\n    \"properties\": {\r\n        \"token\": { \"type\": \"string\" }\r\n    }\r\n};\r\n\r\npm.test(\"Verify Login Successful JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schemaLoginSuccess);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"eve.holt@reqres.in\",\r\n    \"password\": \"cityslicka\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08 - Login Unsuccessful",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code HARUS 400 Bad Request\r\npm.test(\"Status code is 400 Bad Request\", () => {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\n// 2. Parse JSON Response\r\nconst jsonData = pm.response.json();\r\n\r\n// 3. Validasi pesan error dari server\r\npm.test(\"Verify error message for missing login password\", () => {\r\n    pm.expect(jsonData.error).to.eql(\"Missing password\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"peter@klaven\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "09 - Delete User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code HARUS 204 No Content\r\npm.test(\"Status code is 204 No Content\", () => {\r\n    pm.response.to.have.status(204);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "{{user_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - GET Delayed Response",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Validasi Response Time (harus di bawah 5000 ms / 5 detik)\r\npm.test(\"Response time is less than 5000ms\", () => {\r\n    pm.expect(pm.response.responseTime).to.be.below(5000);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users?delay=3",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "delay",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11 - GET List Resource",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON & Validasi array resource warna\r\nconst jsonData = pm.response.json();\r\npm.test(\"Verify resource list is an array and contains color property\", () => {\r\n    pm.expect(jsonData.data).to.be.an(\"array\");\r\n    pm.expect(jsonData.data[0]).to.have.property(\"color\");\r\n});\r\n\r\n// Validasi JSON Schema untuk List Resource (Colors)\r\nconst schemaListResource = {\r\n    \"type\": \"object\",\r\n    \"required\": [\"page\", \"per_page\", \"total\", \"total_pages\", \"data\"],\r\n    \"properties\": {\r\n        \"page\": { \"type\": \"number\" },\r\n        \"per_page\": { \"type\": \"number\" },\r\n        \"total\": { \"type\": \"number\" },\r\n        \"total_pages\": { \"type\": \"number\" },\r\n        \"data\": {\r\n            \"type\": \"array\",\r\n            \"items\": {\r\n                \"type\": \"object\",\r\n                \"required\": [\"id\", \"name\", \"year\", \"color\", \"pantone_value\"],\r\n                \"properties\": {\r\n                    \"id\": { \"type\": \"number\" },\r\n                    \"name\": { \"type\": \"string\" },\r\n                    \"year\": { \"type\": \"number\" },\r\n                    \"color\": { \"type\": \"string\" },\r\n                    \"pantone_value\": { \"type\": \"string\" }\r\n                }\r\n            }\r\n        }\r\n    }\r\n};\r\n\r\npm.test(\"Verify List Resource JSON Schema\", () => {\r\n    pm.response.to.have.jsonSchema(schemaListResource);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/unknown",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "unknown"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12 - GET Single Resource",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Validasi Status Code 200 OK\r\npm.test(\"Status code is 200 OK\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Parse JSON & Validasi detail single resource ID 2\r\nconst jsonData = pm.response.json();\r\npm.test(\"Verify single resource id 2 details\", () => {\r\n    pm.expect(jsonData.data.id).to.eql(2);\r\n    pm.expect(jsonData.data.name).to.be.a(\"string\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/unknown/2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "unknown",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "x-api-key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  }
+}
